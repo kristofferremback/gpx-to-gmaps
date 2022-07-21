@@ -19,7 +19,7 @@ import (
 
 var (
 	filenameF     = flag.String("filename", "", "name of gpx file")
-	outputFolderF = flag.String("output-dir", "/tmp", "folder to output the maps in")
+	outputFolderF = flag.String("output-dir", "", "folder to output the maps in")
 )
 
 type Point struct {
@@ -41,28 +41,40 @@ func main() {
 		log.Fatalf("getting polygons %v", err)
 	}
 
+	for _, polygon := range polygons {
+		fmt.Println(googleMapsURLOf(polygon))
+	}
+
+	if outputFolderF != nil && *outputFolderF != "" {
+		if err := renderPNGs(*outputFolderF, polygons); err != nil {
+			log.Fatalf("rendering PNGs: %v", err)
+		}
+	}
+}
+
+func renderPNGs(outputFolder string, polygons [][]Point) error {
 	imgs := make([]image.Image, 0, len(polygons))
 	for _, polygon := range polygons {
 		img, err := renderOnMap(polygon)
 		if err != nil {
-			log.Fatalf("rendering image on map: %v", err)
+			return fmt.Errorf("rendering image on map: %w", err)
 		}
 		imgs = append(imgs, img)
-
-		fmt.Println(googleMapsURLOf(polygon))
 	}
 
-	if err := os.MkdirAll(*outputFolderF, 0o700); err != nil {
-		log.Fatalf("creating directory for %v: %v", *outputFolderF, err)
+	if err := os.MkdirAll(outputFolder, 0o700); err != nil {
+		return fmt.Errorf("creating directory for %v: %w", outputFolder, err)
 	}
 
 	for i, img := range imgs {
-		fp := filepath.Join(*outputFolderF, fmt.Sprintf("map-%d.png", i))
+		fp := filepath.Join(outputFolder, fmt.Sprintf("map-%d.png", i))
 		log.Printf("output to: %s", fp)
 		if err := gg.SavePNG(fp, img); err != nil {
-			log.Fatalf("saving png for %s: %v", fp, err)
+			return fmt.Errorf("saving png for %s: %w", fp, err)
 		}
 	}
+
+	return nil
 }
 
 func googleMapsURLOf(polygon []Point) string {

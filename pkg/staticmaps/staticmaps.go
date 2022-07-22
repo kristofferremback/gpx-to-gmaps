@@ -11,7 +11,7 @@ import (
 	"github.com/golang/geo/s2"
 	"golang.org/x/image/font/basicfont"
 
-	"github.com/kristofferostlund/gpx-to-google-directions/pkg/geo"
+	"github.com/kristofferostlund/gpx-to-gmaps/pkg/geo"
 )
 
 func RenderOnMap(polygon geo.Polygon) (image.Image, error) {

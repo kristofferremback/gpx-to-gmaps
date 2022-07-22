@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/kristofferostlund/gpx-to-google-directions/pkg/slices"
+	"github.com/kristofferostlund/gpx-to-gmaps/pkg/slices"
 )
 
 func TestPickSpaced(t *testing.T) {

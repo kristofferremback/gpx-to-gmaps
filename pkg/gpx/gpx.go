@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kristofferostlund/gpx-to-google-directions/pkg/geo"
+	"github.com/kristofferostlund/gpx-to-gmaps/pkg/geo"
 	"github.com/tkrajina/gpxgo/gpx"
 )
 

@@ -11,9 +11,9 @@ import (
 
 	"github.com/fogleman/gg"
 
-	"github.com/kristofferostlund/gpx-to-google-directions/pkg/geo"
-	"github.com/kristofferostlund/gpx-to-google-directions/pkg/gpx"
-	"github.com/kristofferostlund/gpx-to-google-directions/pkg/staticmaps"
+	"github.com/kristofferostlund/gpx-to-gmaps/pkg/geo"
+	"github.com/kristofferostlund/gpx-to-gmaps/pkg/gpx"
+	"github.com/kristofferostlund/gpx-to-gmaps/pkg/staticmaps"
 )
 
 var (

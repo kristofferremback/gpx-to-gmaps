@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/kristofferostlund/gpx-to-google-directions/pkg/slices"
+	"github.com/kristofferostlund/gpx-to-gmaps/pkg/slices"
 )
 
 type Polygon []Point

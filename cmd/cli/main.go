@@ -6,15 +6,16 @@ import (
 	"image"
 	"image/color"
 	"log"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	sm "github.com/flopp/go-staticmaps"
 	"github.com/fogleman/gg"
 	"github.com/golang/geo/s2"
 	"github.com/tkrajina/gpxgo/gpx"
+	"golang.org/x/image/font/basicfont"
 )
 
 var (
@@ -83,7 +84,7 @@ func googleMapsURLOf(polygon []Point) string {
 		waypoints = append(waypoints, p.String())
 	}
 
-	googleMapsURL := fmt.Sprintf("https://www.google.com/maps/dir/%s", strings.Join(waypoints, "/"))
+	googleMapsURL := fmt.Sprintf("https://www.google.com/maps/dir/%s/data=!3m1!4b1!4m2!4m1!3e1", strings.Join(waypoints, "/"))
 	return googleMapsURL
 }
 
@@ -97,12 +98,32 @@ func renderOnMap(polygon []Point) (image.Image, error) {
 	}
 
 	cont.AddObject(sm.NewPath(positions, color.Black, 1))
+
+	for i, p := range positions {
+		textImg := textImageOf(fmt.Sprint(i))
+		cont.AddObject(sm.NewImageMarker(p, textImg, 0.5, 0.5))
+	}
+
 	img, err := cont.Render()
 	if err != nil {
 		return nil, fmt.Errorf("rendering image: %w", err)
 	}
 
 	return img, nil
+}
+
+func textImageOf(text string) image.Image {
+	width, height := 20.0, 20.0
+
+	dc := gg.NewContext(int(width), int(height))
+	dc.SetColor(color.Black)
+	dc.Clear()
+	dc.SetFontFace(basicfont.Face7x13)
+
+	dc.SetColor(color.White)
+	dc.DrawStringAnchored(text, height/2, width/2, 0.5, 0.5)
+
+	return dc.Image()
 }
 
 func gpxDataOf(filename string) (*gpx.GPX, error) {
@@ -122,9 +143,9 @@ func polygonsOf(data *gpx.GPX) ([][]Point, error) {
 	polygons := make([][]Point, 0, len(data.Tracks))
 	for _, track := range data.Tracks {
 		polygon := polygonOf(track)
-		smoothPolygon := blur(polygon, 20)
+		blurred := blur(polygon, 20)
 
-		polygons = append(polygons, smoothPolygon)
+		polygons = append(polygons, blurred)
 	}
 
 	return polygons, nil
@@ -135,13 +156,36 @@ func blur(polygon []Point, maxSize int) []Point {
 		return polygon
 	}
 
-	// TODO: Try out a more complex algorithm for this, perhaps one being clever with the shape?
-	// Like basically straight lines could be made into a single point
-	// and non-straight lines could get slightly higher resolution.
-	smoothPolygon := make([]Point, 0, maxSize)
-	atEvery := len(polygon) / maxSize
+	return flatteningBlur(naiveBlur(polygon, 50))
+}
+
+func flatteningBlur(polygon []Point) []Point {
+	out := make([]Point, 0)
 	for i, p := range polygon {
-		if i%atEvery == 0 || i == len(polygon)-1 {
+		if i == 0 || i == len(polygon)-1 {
+			out = append(out, p)
+			continue
+		}
+
+		lastOut := out[len(out)-1]
+		next := polygon[i+1]
+
+		angle := math.Atan2(p.Lat-lastOut.Lat, p.Lng-lastOut.Lng) * (180 / math.Pi)
+		angleNext := math.Atan2(next.Lat-p.Lat, next.Lng-p.Lng) * (180 / math.Pi)
+
+		if math.Abs(angle-angleNext) > 30 {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
+// naiveBlur keeps the first, last, and every nth point in the list and returns it.
+func naiveBlur(polygon []Point, nth int) []Point {
+	smoothPolygon := make([]Point, 0, nth)
+	atEvery := len(polygon) / nth
+	for i, p := range polygon {
+		if i == 0 || i == len(polygon)-1 || i%atEvery == 0 {
 			smoothPolygon = append(smoothPolygon, p)
 		}
 	}
@@ -156,16 +200,4 @@ func polygonOf(track gpx.GPXTrack) []Point {
 		}
 	}
 	return polyon
-}
-
-func polylineOf(polygon []Point) [][]float64 {
-	pl := make([][]float64, 0, len(polygon))
-	for _, p := range polygon {
-		pl = append(pl, []float64{p.Lat, p.Lng})
-	}
-	return pl
-}
-
-func fmtTime(t time.Time) string {
-	return t.Format("2006-01-02T15:04:05.000Z07:00")
 }

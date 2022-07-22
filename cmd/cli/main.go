@@ -7,12 +7,13 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/fogleman/gg"
 
 	"github.com/kristofferostlund/gpx-to-gmaps/pkg/geo"
+	"github.com/kristofferostlund/gpx-to-gmaps/pkg/gmapsurl"
 	"github.com/kristofferostlund/gpx-to-gmaps/pkg/gpx"
+	"github.com/kristofferostlund/gpx-to-gmaps/pkg/slices"
 	"github.com/kristofferostlund/gpx-to-gmaps/pkg/staticmaps"
 )
 
@@ -27,13 +28,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("getting gpx data from %s: %v", *filenameF, err)
 	}
-	polygons, err := gpx.PolygonsOf(gpxData)
-	if err != nil {
-		log.Fatalf("getting polygons %v", err)
-	}
-
+	polygons := slices.Map(gpx.PolygonsOf(gpxData), func(polygon geo.Polygon) geo.Polygon {
+		return geo.ReduceSize(polygon, 25)
+	})
 	for _, polygon := range polygons {
-		fmt.Println(googleMapsURLOf(polygon))
+		fmt.Println(gmapsurl.Of(polygon))
 	}
 
 	if outputFolderF != nil && *outputFolderF != "" {
@@ -66,14 +65,4 @@ func renderPNGs(outputFolder string, polygons []geo.Polygon) error {
 	}
 
 	return nil
-}
-
-func googleMapsURLOf(polygon geo.Polygon) string {
-	waypoints := make([]string, 0, len(polygon)-2)
-	for _, p := range polygon {
-		waypoints = append(waypoints, p.String())
-	}
-
-	googleMapsURL := fmt.Sprintf("https://www.google.com/maps/dir/%s/data=!3m1!4b1!4m2!4m1!3e1", strings.Join(waypoints, "/"))
-	return googleMapsURL
 }

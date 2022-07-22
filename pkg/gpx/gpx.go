@@ -2,11 +2,20 @@ package gpx
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/kristofferostlund/gpx-to-gmaps/pkg/geo"
 	"github.com/tkrajina/gpxgo/gpx"
 )
+
+func Parse(reader io.Reader) (*gpx.GPX, error) {
+	data, err := gpx.Parse(reader)
+	if err != nil {
+		return nil, fmt.Errorf("parsing gpx data: %w", err)
+	}
+	return data, nil
+}
 
 func ReadGPXFile(filename string) (*gpx.GPX, error) {
 	f, err := os.Open(filename)
@@ -14,23 +23,18 @@ func ReadGPXFile(filename string) (*gpx.GPX, error) {
 		return nil, fmt.Errorf("opening file: %w", err)
 	}
 	defer f.Close()
-	data, err := gpx.Parse(f)
-	if err != nil {
-		return nil, fmt.Errorf("parsing gpx data: %w", err)
-	}
-	return data, nil
+	return Parse(f)
 }
 
-func PolygonsOf(data *gpx.GPX) ([]geo.Polygon, error) {
+func PolygonsOf(data *gpx.GPX) []geo.Polygon {
 	polygons := make([]geo.Polygon, 0, len(data.Tracks))
 	for _, track := range data.Tracks {
 		polygon := PolygonOf(track)
-		blurred := geo.ReduceSize(polygon, 25)
 
-		polygons = append(polygons, blurred)
+		polygons = append(polygons, polygon)
 	}
 
-	return polygons, nil
+	return polygons
 }
 
 func PolygonOf(track gpx.GPXTrack) geo.Polygon {

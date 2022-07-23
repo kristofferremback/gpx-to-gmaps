@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,8 +20,9 @@ import (
 const defaultAddr = ":9876"
 
 var (
-	addr     = flag.String("addr", defaultAddr, "HTTP address")
-	logLevel = flag.String("log-level", logging.LevelInfo.String(), "log level")
+	addr       = flag.String("addr", defaultAddr, "HTTP address")
+	logLevel   = flag.String("log-level", logging.LevelInfo.String(), "log level")
+	appBaseURL = flag.String("app-base-url", fmt.Sprintf("http://localhost%s", defaultAddr), "base URL the app is exposed on, incl protocol")
 )
 
 func main() {
@@ -37,8 +39,7 @@ func main() {
 	r.Use(middleware.Timeout(1 * time.Minute))
 
 	r.Get("/status", getStatus())
-
-	r.Mount("/api", httphandler.New(gpxtogmaps.NewService()))
+	r.Mount("/api", httphandler.New(gpxtogmaps.NewService(), fmt.Sprintf("%s/api", *appBaseURL)))
 
 	fs := http.FileServer(http.Dir("./static"))
 	r.Handle("/*", srv.RedirectOn404(fs, "/index.html"))

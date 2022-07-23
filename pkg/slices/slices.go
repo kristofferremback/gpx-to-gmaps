@@ -17,8 +17,8 @@ func PickSpaced[T any](items []T, maxCount int) []T {
 	return out
 }
 
-func Map[T any](items []T, fn func(t T) T) []T {
-	out := make([]T, 0, len(items))
+func Map[T, V any](items []T, fn func(t T) V) []V {
+	out := make([]V, 0, len(items))
 	for _, v := range items {
 		out = append(out, fn(v))
 	}

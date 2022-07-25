@@ -1,6 +1,10 @@
-run = ['./deploy/start.sh', '-app-base-url=https://gpx-to-gmaps.kristofferostlu.repl.co', '-log-level=info']
+run = [
+  './deploy/start.sh',
+  '-app-base-url=https://gpx-to-gmaps.kristofferostlu.repl.co',
+  '-log-level=info'
+]
 
-entrypoint = 'cmd/localserver/localserver.go'[languages.go]
-pattern = '**/*.go'[languages.go.languageServer]
-start = 'gopls'[nix]
+entrypoint = 'cmd/server/server.go'
+
+[nix]
 channel = 'stable-21_11'

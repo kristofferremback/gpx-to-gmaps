@@ -32,7 +32,7 @@ func main() {
 		return geo.ReduceSize(polygon, 25)
 	})
 	for _, polygon := range polygons {
-		fmt.Println(gmapsurl.Of(polygon))
+		fmt.Println(gmapsurl.Of(polygon, gmapsurl.Bike))
 	}
 
 	if outputFolderF != nil && *outputFolderF != "" {

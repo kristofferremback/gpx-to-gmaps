@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/kristofferostlund/recommendli/pkg/srv"
 
 	"github.com/kristofferostlund/gpx-to-gmaps/internal/gpxtogmaps"
 	"github.com/kristofferostlund/gpx-to-gmaps/pkg/geo"
+	"github.com/kristofferostlund/gpx-to-gmaps/pkg/gmapsurl"
 )
 
 type handler struct {
@@ -39,8 +41,24 @@ func (handler) notFoundHandler() http.HandlerFunc {
 
 func (h *handler) postGPXToGMaps() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		vehicleType, ok := map[string]gmapsurl.VehicleType{
+			"car":     gmapsurl.Car,
+			"bike":    gmapsurl.Bike,
+			"walking": gmapsurl.Walking,
+		}[r.FormValue("vehicle_type")]
+		if !ok {
+			srv.JSONError(w, fmt.Errorf("invalid vehicle type %v", r.FormValue("vehicle_type")), srv.Status(http.StatusBadRequest))
+			return
+		}
+		maxPrecision, err := strconv.Atoi(r.FormValue("max_precision"))
+		if err != nil {
+			srv.JSONError(w, fmt.Errorf("parsing max_precision: %w", err), srv.Status(http.StatusBadRequest))
+			return
+		}
+
 		if err := r.ParseMultipartForm(5 * 1024 * 1024); err != nil {
 			srv.JSONError(w, err, srv.Status(http.StatusBadRequest))
+			return
 		}
 
 		file, _, err := r.FormFile("gpx")
@@ -50,7 +68,7 @@ func (h *handler) postGPXToGMaps() http.HandlerFunc {
 		}
 		defer file.Close()
 
-		polygons, err := h.s.ConvertToPolygons(file, 25)
+		polygons, err := h.s.ConvertToPolygons(file, maxPrecision)
 		if err != nil {
 			srv.JSONError(w, err, srv.Status(http.StatusInternalServerError))
 			return
@@ -60,7 +78,7 @@ func (h *handler) postGPXToGMaps() http.HandlerFunc {
 		mapURLs := make([]string, 0, len(polygons))
 
 		for _, polygon := range polygons {
-			gmapsURLs = append(gmapsURLs, h.s.GoogleMapsURL(polygon))
+			gmapsURLs = append(gmapsURLs, h.s.GoogleMapsURL(polygon, vehicleType))
 			mapURLs = append(mapURLs, h.staticMapURLFor(r, polygon))
 		}
 

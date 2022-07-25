@@ -26,14 +26,14 @@ func (s *Service) ConvertToPolygons(gpxReader io.Reader, maxSize int) ([]geo.Pol
 	}
 
 	polygons := slices.Map(gpx.PolygonsOf(g), func(polygon geo.Polygon) geo.Polygon {
-		return geo.ReduceSize(polygon, 25)
+		return geo.ReduceSize(polygon, maxSize)
 	})
 
 	return polygons, nil
 }
 
-func (s *Service) GoogleMapsURL(polygon geo.Polygon) string {
-	return gmapsurl.Of(polygon)
+func (s *Service) GoogleMapsURL(polygon geo.Polygon, vehicleType gmapsurl.VehicleType) string {
+	return gmapsurl.Of(polygon, vehicleType)
 }
 
 func (s *Service) PNG(writer io.Writer, polygon geo.Polygon) error {

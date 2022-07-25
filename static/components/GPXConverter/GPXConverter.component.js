@@ -1,5 +1,8 @@
-import getUseFetch, { fetchStates } from '../../hooks/use-fetch.js'
-import getModal from '../Modal/Modal.component.js'
+import html from '../../lib/html.js'
+import { useCallback, useState, useEffect, useMemo } from '../../deps/preact/hooks.js'
+
+import useFetch, { fetchStates } from '../../hooks/use-fetch.js'
+import Modal from '../Modal/Modal.component.js'
 
 const vehicleTypes = [
   { value: 'bike', name: 'Bike' },
@@ -7,87 +10,78 @@ const vehicleTypes = [
   { value: 'walking', name: 'Walking' },
 ]
 
-/**
- * @param {any} html
- * @param {import('preact/hooks')} hooks
- */
-const getGPXConverter = (html, hooks) => {
-  const { useCallback, useState, useEffect, useMemo } = hooks
-  const useFetch = getUseFetch(hooks)
-  const Modal = getModal(html)
+const GPXConverter = () => {
+  const [dispatchFetch, state, resp] = useFetch()
+  const [requestData, setRequestData] = useState({
+    vehicle_type: vehicleTypes[0].value,
+    max_precision: '25',
+    gpx: null,
+  })
 
-  const GPXConverter = () => {
-    const [dispatchFetch, state, resp] = useFetch()
-    const [requestData, setRequestData] = useState({
-      vehicle_type: vehicleTypes[0].value,
-      max_precision: '25',
-      gpx: null,
-    })
+  const [errIsOpen, setErrIsOpen] = useState(false)
+  const closeModal = useCallback(() => setErrIsOpen(false), [setErrIsOpen])
+  useEffect(() => {
+    if (state === fetchStates.ERROR) {
+      setErrIsOpen(true)
+    }
+    return () => {
+      closeModal
+    }
+  }, [state, closeModal])
 
-    const [errIsOpen, setErrIsOpen] = useState(false)
-    const closeModal = useCallback(() => setErrIsOpen(false), [setErrIsOpen])
-    useEffect(() => {
-      if (state === fetchStates.ERROR) {
-        setErrIsOpen(true)
+  const submitAllowed = useMemo(() => {
+    return [
+      requestData.gpx != null,
+      !isNaN(parseInt(requestData.max_precision)),
+      requestData.vehicle_type != '',
+      state != fetchStates.LOADING,
+    ].every(Boolean)
+  }, [requestData, state])
+
+  const onChange = useCallback(
+    (e) => {
+      switch (e.target.name) {
+        case 'vehicle_type':
+          return setRequestData({ ...requestData, vehicle_type: e.target.value })
+        case 'max_precision':
+          let value = parseInt(e.target.value)
+          const [min, max] = [e.target.min, e.target.max].map((v) => parseInt(v))
+          if (value > max) {
+            value = max
+          } else if (value < min) {
+            value = min
+          }
+
+          return setRequestData({ ...requestData, max_precision: value.toString() })
+        case 'gpx_file':
+          return setRequestData({ ...requestData, gpx: e.target.files[0] })
+        default:
+          break
       }
-      return () => {
-        closeModal
+    },
+    [requestData, setRequestData]
+  )
+
+  const onSubmit = useCallback(
+    async (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+
+      const data = new FormData()
+      for (const [key, value] of Object.entries(requestData)) {
+        data.append(key, value)
       }
-    }, [state, closeModal])
 
-    const submitAllowed = useMemo(() => {
-      return [
-        requestData.gpx != null,
-        !isNaN(parseInt(requestData.max_precision)),
-        requestData.vehicle_type != '',
-        state != fetchStates.LOADING,
-      ].every(Boolean)
-    }, [requestData, state])
+      await dispatchFetch(
+        '/api/convert-gpx',
+        { method: 'POST', body: data },
+        { validateStatus: (status) => status === 200 }
+      )
+    },
+    [dispatchFetch, requestData]
+  )
 
-    const onChange = useCallback(
-      (e) => {
-        switch (e.target.name) {
-          case 'vehicle_type':
-            return setRequestData({ ...requestData, vehicle_type: e.target.value })
-          case 'max_precision':
-            let value = parseInt(e.target.value)
-            const [min, max] = [e.target.min, e.target.max].map((v) => parseInt(v))
-            if (value > max) {
-              value = max
-            } else if (value < min) {
-              value = min
-            }
-
-            return setRequestData({ ...requestData, max_precision: value.toString() })
-          case 'gpx_file':
-            return setRequestData({ ...requestData, gpx: e.target.files[0] })
-          default:
-            break
-        }
-      },
-      [requestData, setRequestData]
-    )
-
-    const onSubmit = useCallback(
-      async (e) => {
-        e.preventDefault()
-        e.stopPropagation()
-
-        const data = new FormData()
-        for (const [key, value] of Object.entries(requestData)) {
-          data.append(key, value)
-        }
-
-        await dispatchFetch(
-          '/api/convert-gpx',
-          { method: 'POST', body: data },
-          { validateStatus: (status) => status === 200 }
-        )
-      },
-      [dispatchFetch, requestData]
-    )
-
-    return html`
+  return html`
     <div class="gpx-converter">
 
       <link rel="stylesheet" href="/components/GPXConverter/GPXConverter.styles.css" />
@@ -149,9 +143,6 @@ const getGPXConverter = (html, hooks) => {
     }
     </${Modal}>
     `
-  }
-
-  return GPXConverter
 }
 
-export default getGPXConverter
+export default GPXConverter

@@ -1,2 +1,3 @@
-export * from './GPXConverter.component.js'
-export { default } from './GPXConverter.component.js'
+import GPXConverterContainer from './GPXConverter.container.js'
+
+export default GPXConverterContainer

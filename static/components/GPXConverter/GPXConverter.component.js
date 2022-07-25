@@ -1,43 +1,19 @@
 import html from '../../lib/html.js'
-import { useCallback, useState, useEffect, useMemo } from '../../deps/preact/hooks.js'
+import { useCallback } from '../../deps/preact/hooks.js'
 
-import useFetch, { fetchStates } from '../../hooks/use-fetch.js'
-import Modal from '../Modal/Modal.component.js'
+import { fetchStates } from '../../lib/hooks/use-fetch.js'
 
-const vehicleTypes = [
-  { value: 'bike', name: 'Bike' },
-  { value: 'car', name: 'Car' },
-  { value: 'walking', name: 'Walking' },
-]
+import { vehicleTypes } from './vehicle-types.js'
 
-const GPXConverter = () => {
-  const [dispatchFetch, state, resp] = useFetch()
-  const [requestData, setRequestData] = useState({
-    vehicle_type: vehicleTypes[0].value,
-    max_precision: '25',
-    gpx: null,
-  })
-
-  const [errIsOpen, setErrIsOpen] = useState(false)
-  const closeModal = useCallback(() => setErrIsOpen(false), [setErrIsOpen])
-  useEffect(() => {
-    if (state === fetchStates.ERROR) {
-      setErrIsOpen(true)
-    }
-    return () => {
-      closeModal
-    }
-  }, [state, closeModal])
-
-  const submitAllowed = useMemo(() => {
-    return [
-      requestData.gpx != null,
-      !isNaN(parseInt(requestData.max_precision)),
-      requestData.vehicle_type != '',
-      state != fetchStates.LOADING,
-    ].every(Boolean)
-  }, [requestData, state])
-
+const GPXConverter = ({
+  onSubmit,
+  requestData,
+  setRequestData,
+  submitAllowed,
+  state,
+  googleMapsUrls,
+  mapImageUrls,
+}) => {
   const onChange = useCallback(
     (e) => {
       switch (e.target.name) {
@@ -56,34 +32,15 @@ const GPXConverter = () => {
         case 'gpx_file':
           return setRequestData({ ...requestData, gpx: e.target.files[0] })
         default:
+          console.warn('unknown target', { name: e.target.name, target })
           break
       }
     },
     [requestData, setRequestData]
   )
 
-  const onSubmit = useCallback(
-    async (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-
-      const data = new FormData()
-      for (const [key, value] of Object.entries(requestData)) {
-        data.append(key, value)
-      }
-
-      await dispatchFetch(
-        '/api/convert-gpx',
-        { method: 'POST', body: data },
-        { validateStatus: (status) => status === 200 }
-      )
-    },
-    [dispatchFetch, requestData]
-  )
-
   return html`
     <div class="gpx-converter">
-
       <link rel="stylesheet" href="/components/GPXConverter/GPXConverter.styles.css" />
       <div class="grid">
         <aside>
@@ -114,35 +71,21 @@ const GPXConverter = () => {
             </button>
           </form>
         </aside>
-        ${
-          fetchStates.IDLE && resp.response != null
-            ? html`
-                ${resp.response.google_maps_urls.map(
-                  (url, i) => html`
-                    <article class="preview-map">
-                      <img src=${resp.response.maps_urls[i]} />
-                      <h3><a href=${url} target="_blank">Google Maps directions here</a></h3>
-                    </article>
-                  `
-                )}
-              `
-            : null
-        }
+        ${googleMapsUrls != null && mapImageUrls != null
+          ? html`
+              ${googleMapsUrls.map(
+                (url, i) => html`
+                  <article class="preview-map">
+                    <img src=${mapImageUrls[i]} />
+                    <h3><a href=${url} target="_blank">Google Maps directions here</a></h3>
+                  </article>
+                `
+              )}
+            `
+          : null}
       </div>
     </div>
-    <${Modal} isOpen=${errIsOpen} title="Something went wrong" close=${closeModal}>
-    ${
-      errIsOpen
-        ? html`
-            <details>
-              <summary>An error occurred when converting the .gpx file</summary>
-              <pre>${resp.error != null ? resp.error.message : 'unknown error'}</pre>
-            </details>
-          `
-        : null
-    }
-    </${Modal}>
-    `
+  `
 }
 
 export default GPXConverter

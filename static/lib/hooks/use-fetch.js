@@ -1,4 +1,4 @@
-import { useState, useCallback } from '../deps/preact/hooks.js'
+import { useState, useCallback } from '../../deps/preact/hooks.js'
 
 export const fetchStates = {
   IDLE: 'IDLE',

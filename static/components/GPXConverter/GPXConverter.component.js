@@ -32,7 +32,7 @@ const GPXConverter = ({
         case 'gpx_file':
           return setRequestData({ ...requestData, gpx: e.target.files[0] })
         default:
-          console.warn('unknown target', { name: e.target.name, target })
+          console.warn('unknown target', { name: e.target.name, event: e })
           break
       }
     },
@@ -64,7 +64,7 @@ const GPXConverter = ({
               onchange=${onChange}
             />
 
-            <label for="gpx_file">Select .gpx file</label>
+            <label for="gpx_file">Select <code>.gpx</code> file</label>
             <input type="file" name="gpx_file" accept=".gpx" onchange=${onChange} />
             <button type="submit" disabled=${!submitAllowed} aria-busy=${state === fetchStates.LOADING}>
               Upload
@@ -76,7 +76,11 @@ const GPXConverter = ({
               ${googleMapsUrls.map(
                 (url, i) => html`
                   <article class="preview-map">
-                    <img src=${mapImageUrls[i]} />
+                    <p>Preview of the waypoints that will be used by Google</p>
+                    <img
+                      alt="Map with a preview of the waypoints that will be used by Google"
+                      src=${mapImageUrls[i]}
+                    />
                     <h3><a href=${url} target="_blank">Google Maps directions here</a></h3>
                   </article>
                 `

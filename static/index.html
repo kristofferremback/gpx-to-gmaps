@@ -1,22 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Convert .gpx to Google Maps directions</title>
-    <!-- <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" /> -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/picocss/1.5.3/pico.min.css" />
-    <script type="module" src="index.js"></script>
-  </head>
 
-  <body>
-    <main class="container">
-      <hgroup>
-        <h1>Convert .gpx to Google Maps</h1>
-        <h2>Upload a .gpx file and convert it to directions in Google Maps.</h2>
-      </hgroup>
-      <section id="gpx-converter"></section>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Convert .gpx to Google Maps directions</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/picocss/1.5.3/pico.min.css" />
+  <script type="module" src="index.js"></script>
+  <style>
+    #gpx-converter {
+      min-height: 450px;
+    }
+
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <hgroup>
+      <h1>Convert .gpx to Google Maps</h1>
+      <h2>Upload a .gpx file and convert it to directions in Google Maps.</h2>
+    </hgroup>
+    <div id="gpx-converter"></div>
+
+    <hr />
+
+    <article>
+      <h2>FAQ</h2>
+      <ul>
+        <li id="faq-what-is-this">
+          <b>What is this?</b>
+          A tool to very roughly convert <a href="https://en.wikipedia.org/wiki/GPS_Exchange_Format"
+            target="_blank"><code>.gpx</code>
+            files</a>
+          into Google Maps Directions. I wanted to be able to take routes from Strava and navigate through them using
+          Google Maps instead of Strava's own route navigation and couldn't find one which did just that.
+        </li>
+        <li id="faq-why-is-the-path-wrong">
+          <b>Why is Google Maps not following the exact path?</b>
+          The entire path from the <code>.gpx</code> file is reduced down to a few (hopefully) key waypoints to make the
+          navigation 1) bearable and 2) not overwhelming for the navigation client (Google Maps doesn't allow manually
+          using more than 10 waypoints as of 2022-07-25). The tool can be configured to use at most 3-30 with no
+          guarantee all will be used. Play around with the <b>Max precision</b> to see if you can find something that
+          works for you! <em>I've found 25 works pretty well on a 50km bike ride.</em>
+        </li>
+        <li id="faq-why-is-the-path-wrong">
+          <b>Why does the image look the same when I change vehicle type?</b>
+          The image only shows the waypoints Google Maps will navigate to, it doesn't actually show the path that will
+          be taken.
+        </li>
+        <li id="faq-do-you-store-my-files">
+          <b>Do you keep my files when I upload them?</b>
+          No, I do not. In fact, you can
+          <a href="https://github.com/kristofferostlund/gpx-to-gmaps" target="_blank">see for yourself on my Github</a>.
+          The uploaded files are <b>only</b> read from during the upload, they're never stored and I see no reason to do
+          so on my end.
+        </li>
+        <li id="faq-how-do-i-export-gpx-from-strava">
+          <b>How do I export the <code>.gpx</code> file from Stava?</b>
+          They have an <a
+            href="https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export#GPX"
+            target="_blank">
+            article on that
+          </a> explaining how to export them on their support page.
+        </li>
+      </ul>
+    </article>
+
   </main>
-  </body>
+  <footer class="container">
+    This tool was written by <b>Kristoffer Östlund</b> and can be forked on <a
+      href="https://github.com/kristofferostlund/gpx-to-gmaps" target="_blank">Github</a>.
+  </footer>
+</body>
+
 </html>

@@ -7,4 +7,4 @@ run = [
 entrypoint = 'cmd/server/server.go'
 
 [nix]
-channel = 'stable-21_11'
+channel = 'unstable'

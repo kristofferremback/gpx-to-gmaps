@@ -3,7 +3,7 @@
 script_dir=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 executable_path=$(make executable-path)
 
-if [[ ! -f "${executable_path}" ]]; then
+if [[ -z "${executable_path}" ]]; then
 	curr_pwd=$(pwd)
 	cd "${script_dir}/.."
 
@@ -12,4 +12,5 @@ if [[ ! -f "${executable_path}" ]]; then
 	cd "${curr_pwd}"
 fi
 
+executable_path=$(make executable-path)
 "${executable_path}" ${@}

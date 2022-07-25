@@ -1,4 +1,4 @@
-BUILD_PATH := $(realpath ./build/server)
+BUILD_PATH := $(shell realpath ./build/server)
 
 chmod-deploy-scripts:
 	chmod +x ./deploy/start.sh
@@ -17,3 +17,8 @@ chmod-server:
 	chmod +x ./build/server
 
 build: build-server chmod-server
+.PHONY: build
+
+ls-build:
+	mkdir -p build
+	ls -lhar build

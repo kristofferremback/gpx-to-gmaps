@@ -13,6 +13,32 @@
       min-height: 450px;
     }
 
+    /* GPXConverter */
+    #gpx-converter :root {
+      --spacing-gpx-converter: 3rem;
+    }
+
+    #gpx-converter .grid article {
+      margin-top: 0;
+      padding-top: 0;
+    }
+
+    @media (min-width: 992px) {
+      #gpx-converter .grid {
+        grid-column-gap: var(--spacing-gpx-converter);
+        grid-template-columns: 25% auto;
+      }
+    }
+
+    @media (max-width: 992px) {
+      #gpx-converter .grid article {
+        padding-left: 0;
+        padding-right: 0;
+      }
+    }
+
+    /* GPXConverter */
+
   </style>
 </head>
 

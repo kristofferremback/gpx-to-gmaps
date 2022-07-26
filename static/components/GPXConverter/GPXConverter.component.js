@@ -41,7 +41,6 @@ const GPXConverter = ({
 
   return html`
     <div class="gpx-converter">
-      <link rel="stylesheet" href="/components/GPXConverter/GPXConverter.styles.css" />
       <div class="grid">
         <aside>
           <form onsubmit=${onSubmit}>

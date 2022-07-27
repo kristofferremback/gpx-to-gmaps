@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -34,12 +35,20 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
+	r.Use(func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if strings.HasPrefix(r.URL.Path, "/api") {
+				middleware.Logger(h).ServeHTTP(w, r)
+				return
+			}
+			h.ServeHTTP(w, r)
+		})
+	})
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(1 * time.Minute))
 
 	r.Get("/status", getStatus())
-	r.Mount("/api", httphandler.New(gpxtogmaps.NewService(), fmt.Sprintf("%s/api", *appBaseURL)))
+	r.Mount("/api", httphandler.New(log, gpxtogmaps.NewService(), fmt.Sprintf("%s/api", *appBaseURL)))
 
 	fs := http.FileServer(http.Dir("./static"))
 	r.Handle("/*", srv.RedirectOn404(fs, "/index.html"))
